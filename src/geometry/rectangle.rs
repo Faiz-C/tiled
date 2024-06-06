@@ -1,6 +1,6 @@
 use crate::geometry::point::Point;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Rect {
     pub top_left: Point,
     pub top_right: Point

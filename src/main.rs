@@ -2,6 +2,7 @@ use crate::geometry::rectangle::Rect;
 
 mod geometry;
 mod tiles;
+mod tree;
 
 fn main() {
 
