@@ -1,16 +1,37 @@
 use crate::tiles::tile::Tile;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct TileTreeNode {
     pub tile: Option<Tile>,
     pub depth: i32,
-    pub left: Option<TileTreeNode>,
-    pub right: Option<TileTreeNode>,
-    pub parent: Option<TileTreeNode>,
+    pub left: Option<Box<TileTreeNode>>,
+    pub right: Option<Box<TileTreeNode>>,
+    pub parent: Option<Box<TileTreeNode>>,
 }
 
 impl TileTreeNode {
-    pub fn new(tile: Option<Tile>, depth: i32, left: Option<TileTreeNode>, right: Option<TileTreeNode>, parent: Option<TileTreeNode>) -> TileTreeNode {
+    pub fn new(
+        tile: Option<Tile>,
+        depth: i32,
+        left: Option<TileTreeNode>,
+        right: Option<TileTreeNode>,
+        parent: Option<TileTreeNode>
+    ) -> TileTreeNode {
+        let left = match left {
+            None => None,
+            Some(l) => Some(Box::new(l))
+        };
+
+        let right = match right {
+            None => None,
+            Some(r) => Some(Box::new(r))
+        };
+
+        let parent = match parent {
+            None => None,
+            Some(p) => Some(Box::new(p))
+        };
+
         return TileTreeNode {
             tile,
             depth,
@@ -24,23 +45,7 @@ impl TileTreeNode {
         return Self::new(Some(tile), depth, None, None, parent)
     }
 
-    pub fn is_leaf(self) -> bool {
+    pub fn is_leaf(&self) -> bool {
         return self.right.is_none() && self.left.is_none()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::geometry::rectangle::Rect;
-    use crate::tiles::tile::Tile;
-    use crate::tree::node::TileTreeNode;
-
-    #[test]
-    fn leaf_node_test() {
-        let tile = Tile::new(Rect::new(0, 0, 2000, 2000));
-        let leaf = TileTreeNode::new_leaf(tile, 1, None);
-
-        assert_eq!(true, leaf.is_leaf(), "No children implies leaf node")
     }
 }

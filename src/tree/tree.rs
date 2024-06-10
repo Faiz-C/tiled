@@ -14,10 +14,10 @@ impl TileTree {
     }
 
     pub fn insert(self, tile: Tile) {
-        Self::insert_tile(self.root, tile)
+        Self::insert_tile(&self.root, tile)
     }
 
-    fn insert_tile(node: TileTreeNode, tile: Tile) {
+    fn insert_tile(node: &TileTreeNode, tile: Tile) {
         // How inserts work:
         // 1. Find the first node, scanning right to left, that has no children
         // 2. Expand this node to have two children
@@ -26,11 +26,10 @@ impl TileTree {
 
         // Base case is that this node has no children
         if node.is_leaf() {
-            let mut node = node;
+            let mut node = node.clone();
 
-            let left_child = TileTreeNode::new_leaf(node.tile.unwrap(), node.depth + 1, Some(node));
-
-            let right_child = TileTreeNode::new_leaf(tile, node.depth + 1, Some(node));
+            let left_child = Box::new(TileTreeNode::new_leaf(node.tile.unwrap(), node.depth + 1, Some(node.clone())));
+            let right_child = Box::new(TileTreeNode::new_leaf(tile, node.depth + 1, Some(node)));
 
             node.tile = None;
             node.left = Some(left_child);
@@ -44,19 +43,9 @@ impl TileTree {
 
         match node.left {
             None => {}
-            Some(child) => Self::insert_tile(child, tile)
+            Some(child) => Self::insert_tile(child.into_inner(), tile)
         }
 
     }
 
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_insert() {
-        // noop for now
-    }
 }
