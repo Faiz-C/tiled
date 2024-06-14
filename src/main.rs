@@ -1,8 +1,4 @@
-use crate::geometry::rectangle::Rect;
-
-mod geometry;
-mod tiles;
-mod tree;
+use tiled::geometry::Rect;
 
 fn main() {
 

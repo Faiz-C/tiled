@@ -1,6 +1,6 @@
-use crate::geometry::rectangle::Rect;
+use crate::geometry::Rect;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Tile {
     boundary: Rect,
     // Insert application window details here
