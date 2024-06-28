@@ -74,12 +74,18 @@ impl TileTree {
 
             match &node.right {
                 None => {}
-                Some(child) => insert(&mut child.borrow_mut(), app_process_id)
+                Some(child) => {
+                    insert(&mut child.borrow_mut(), app_process_id);
+                    return;
+                }
             }
 
             match &node.left {
                 None => {}
-                Some(child) => insert(&mut child.borrow_mut(), app_process_id)
+                Some(child) => {
+                    insert(&mut child.borrow_mut(), app_process_id);
+                    return;
+                }
             }
 
             let child_depth = node.depth + 1;

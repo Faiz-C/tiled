@@ -31,14 +31,33 @@ fn insert_many() {
 
     let visit = tree.visit();
 
-    assert_eq!(2, visit.len(), "First visit has incorrect number of elements");
+    assert_eq!(2, visit.len(), "First visit doesn't have exactly 2 elements");
 
-    for tile in visit {
+    for (id, tile) in visit.iter().enumerate() {
+        assert_eq!(id + 1, tile.app_process_id as usize, "Expected id {:?}", id);
         assert_eq!(1920, tile.boundary.width(), "Expected 1920 for the child's width");
         assert_eq!(2160, tile.boundary.height(), "Expected 2160 for the child's height");
     }
 
     tree.insert(3);
+    tree.insert(4);
 
-    // More tests go here
+    let visit = tree.visit();
+
+    // We should now have something that looks like
+    // |----------------|
+    // |  1    |   2    |
+    // |       |        |
+    // |----------------|
+    // |  4    |   3    |
+    // |       |        |
+    // |----------------|
+
+    assert_eq!(4, visit.len(), "Second visit doesn't have exactly 4 elements");
+
+    for (id, tile) in visit.iter().enumerate() {
+        assert_eq!(id + 1, tile.app_process_id as usize, "Expected id {:?}", id);
+        assert_eq!(1920, tile.boundary.width(), "Expected 1920 for the child's width");
+        assert_eq!(1080, tile.boundary.height(), "Expected 1080 for the child's height");
+    }
 }
