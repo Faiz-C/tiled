@@ -89,9 +89,9 @@ impl TileTree {
             let parent = node;
 
             let (left_child_rect, right_child_rect) = if child_depth % 2 != 0 {
-                node_tile.boundary.split_horizontally()
-            } else {
                 node_tile.boundary.split_vertically()
+            } else {
+                node_tile.boundary.split_horizontally()
             };
 
             let left_child = Box::new(RefCell::new(TileNode::new_leaf(

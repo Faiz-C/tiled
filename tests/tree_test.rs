@@ -29,12 +29,16 @@ fn insert_many() {
     tree.insert(1);
     tree.insert(2);
 
-    let visit1 = tree.visit();
+    let visit = tree.visit();
 
-    assert_eq!(2, visit1.len(), "First visit has incorrect number of elements");
+    assert_eq!(2, visit.len(), "First visit has incorrect number of elements");
 
-    for tile in visit1 {
+    for tile in visit {
         assert_eq!(1920, tile.boundary.width(), "Expected 1920 for the child's width");
         assert_eq!(2160, tile.boundary.height(), "Expected 2160 for the child's height");
     }
+
+    tree.insert(3);
+
+    // More tests go here
 }

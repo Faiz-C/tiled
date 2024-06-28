@@ -40,23 +40,23 @@ impl Rect {
         return self.bottom_right.y - self.top_left.y
     }
 
-    pub fn split_vertically(&self) -> (Rect, Rect) {
+    pub fn split_horizontally(&self) -> (Rect, Rect) {
         let height = self.bottom_right.y - self.top_left.y;
         let half_height = height / 2;
 
         return (
-            Rect::new(self.top_left.x, self.top_left.y, self.bottom_right.x, half_height),
-            Rect::new(self.top_left.x, half_height, self.bottom_right.x, self.bottom_right.y),
+            Rect::new(self.top_left.x, self.top_left.y, self.width(), half_height),
+            Rect::new(self.top_left.x, half_height, self.width(), half_height),
         )
     }
 
-    pub fn split_horizontally(&self) -> (Rect, Rect) {
+    pub fn split_vertically(&self) -> (Rect, Rect) {
         let width = self.bottom_right.x - self.top_left.x;
         let half_width = width / 2;
 
         return (
-            Rect::new(self.top_left.x, self.top_left.y, half_width, self.bottom_right.y),
-            Rect::new(half_width, self.top_left.y, self.bottom_right.x, self.bottom_right.y),
+            Rect::new(self.top_left.x, self.top_left.y, half_width, self.height()),
+            Rect::new(half_width, self.top_left.y, half_width, self.height()),
         )
     }
 
