@@ -2,12 +2,12 @@ use crate::geometry::Rect;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Tile {
-    boundary: Rect,
-    // Insert application window details here
+    pub app_process_id: i32,
+    pub boundary: Rect
 }
 
 impl Tile {
-    pub fn new(boundary: Rect) -> Tile {
-        return Tile { boundary }
+    pub fn new(app_process_id: i32, boundary: Rect) -> Tile {
+        return Tile { app_process_id, boundary }
     }
 }

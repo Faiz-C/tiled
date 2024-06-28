@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
+use crate::geometry::Rect;
 use crate::tile::Tile;
 
 // Because a TileTreeNode is a recursive type:
@@ -11,23 +12,23 @@ use crate::tile::Tile;
 // 4) Weak is used for the parent to avoid needless ownership of the parent
 
 #[derive(Debug, Clone)]
-pub struct TileTreeNode {
+pub struct TileNode {
     pub tile: Option<Tile>,
     pub depth: i32,
-    pub left: Option<Box<RefCell<TileTreeNode>>>,
-    pub right: Option<Box<RefCell<TileTreeNode>>>,
-    pub parent: Option<Weak<RefCell<TileTreeNode>>>,
+    pub left: Option<Box<RefCell<TileNode>>>,
+    pub right: Option<Box<RefCell<TileNode>>>,
+    pub parent: Option<Weak<RefCell<TileNode>>>,
 }
 
-impl TileTreeNode {
+impl TileNode {
     pub fn new(
         tile: Option<Tile>,
         depth: i32,
-        left: Option<Box<RefCell<TileTreeNode>>>,
-        right: Option<Box<RefCell<TileTreeNode>>>,
-        parent: Option<Weak<RefCell<TileTreeNode>>>
-    ) -> TileTreeNode {
-        return TileTreeNode {
+        left: Option<Box<RefCell<TileNode>>>,
+        right: Option<Box<RefCell<TileNode>>>,
+        parent: Option<Weak<RefCell<TileNode>>>
+    ) -> TileNode {
+        return TileNode {
             tile,
             depth,
             left,
@@ -36,7 +37,7 @@ impl TileTreeNode {
         }
     }
 
-    pub fn new_leaf(tile: Tile, depth: i32, parent: Option<Weak<RefCell<TileTreeNode>>>) -> TileTreeNode {
+    pub fn new_leaf(tile: Tile, depth: i32, parent: Option<Weak<RefCell<TileNode>>>) -> TileNode {
         return Self::new(Some(tile), depth, None, None, parent)
     }
 
@@ -49,70 +50,81 @@ impl TileTreeNode {
 
 
 pub struct TileTree {
-    root: TileTreeNode
+    screen_size: Rect,
+    root: Option<TileNode>
 }
 
 impl TileTree {
 
-    pub fn new(tile: Tile) -> TileTree {
+    pub fn new(screen_size: Rect) -> TileTree {
         return TileTree {
-            root: TileTreeNode::new_leaf(tile, 0, None)
+            screen_size,
+            root: None
         }
     }
 
-    pub fn insert(&self, tile: Tile) {
+    pub fn insert(&mut self, app_process_id: i32) {
 
-        fn insert(node: &TileTreeNode, tile: Tile) {
+        fn insert(node: &mut TileNode, app_process_id: i32) {
             // How inserts work:
             // 1. Find the first node, scanning right to left, that has no children
             // 2. Expand this node to have two children
             //    2.1 This node becomes a parent
             //    2.2 Two children get added, left child has parent's original value, right child has the new value
 
-            if node.is_leaf() {
-                let parent = Rc::new(RefCell::new(node.clone()));
-                let child_depth = node.depth + 1;
-
-                let left_child = Box::new(RefCell::new(TileTreeNode::new_leaf(
-                    node.tile.unwrap(),
-                    child_depth,
-                    Some(Rc::downgrade(&parent))
-                )));
-
-                let right_child = Box::new(RefCell::new(TileTreeNode::new_leaf(
-                    tile,
-                    child_depth,
-                    Some(Rc::downgrade(&parent))
-                )));
-
-                let mut parent = parent.borrow_mut();
-
-                parent.tile = None;
-                parent.left = Some(left_child);
-                parent.right = Some(right_child);
-
-                return
-            }
-
-            let node = node.clone();
-
-            match node.right {
+            match &node.right {
                 None => {}
-                Some(child) => insert(&child.borrow(), tile)
+                Some(child) => insert(&mut child.borrow_mut(), app_process_id)
             }
 
-            match node.left {
+            match &node.left {
                 None => {}
-                Some(child) => insert(&child.borrow(), tile)
+                Some(child) => insert(&mut child.borrow_mut(), app_process_id)
             }
 
+            let child_depth = node.depth + 1;
+            let node_tile = node.tile.unwrap();
+
+            let parent_ref = Rc::new(RefCell::new(node.clone()));
+            let parent = node;
+
+            let (left_child_rect, right_child_rect) = if child_depth % 2 != 0 {
+                node_tile.boundary.split_horizontally()
+            } else {
+                node_tile.boundary.split_vertically()
+            };
+
+            let left_child = Box::new(RefCell::new(TileNode::new_leaf(
+                Tile::new(node_tile.app_process_id, left_child_rect),
+                child_depth,
+                Some(Rc::downgrade(&parent_ref))
+            )));
+
+            let right_child = Box::new(RefCell::new(TileNode::new_leaf(
+                Tile::new(app_process_id, right_child_rect),
+                child_depth,
+                Some(Rc::downgrade(&parent_ref))
+            )));
+
+            parent.tile = None;
+            parent.left = Some(left_child);
+            parent.right = Some(right_child);
         }
 
-        insert(&self.root, tile)
+        match &mut self.root {
+            None => {
+                let tile = Tile::new(app_process_id, self.screen_size);
+                self.root = Some(TileNode::new_leaf(tile, 0, None))
+            }
+            Some(node) => {
+                insert(node, app_process_id)
+            }
+        }
+
     }
 
     pub fn visit(&self) -> Vec<Tile> {
-        fn visit(node: &TileTreeNode) -> Vec<Tile> {
+        fn visit(node: &TileNode) -> Vec<Tile> {
             let mut tiles = Vec::new();
 
             let node = node.clone();
@@ -125,7 +137,10 @@ impl TileTree {
                 }
             }
 
-            tiles.push(node.tile.unwrap());
+            match node.tile {
+                None => {}
+                Some(tile) => tiles.push(tile)
+            }
 
             match node.right {
                 None => {}
@@ -138,6 +153,9 @@ impl TileTree {
             return tiles;
         }
 
-        return visit(&self.root)
+        match &self.root {
+            None => Vec::new(),
+            Some(node) => visit(node)
+        }
     }
 }
